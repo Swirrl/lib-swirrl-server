@@ -2,8 +2,7 @@
   (:require [clojure.test :refer :all]
             [ring.mock.request :refer [request]]
             [swirrl-server.async.status-routes :refer :all]
-            [swirrl-server.async.jobs :refer [restart-id]]
-            [drafter.write-scheduler :refer [create-job]])
+            [swirrl-server.async.jobs :refer [restart-id create-job]])
   (:import [java.util UUID]))
 
 (def job-return-value {:type :ok})
