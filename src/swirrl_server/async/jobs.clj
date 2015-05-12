@@ -11,12 +11,15 @@
 
 (defrecord Job [id priority time function value-p])
 
-(defn create-job [priority f]
-  (->Job (UUID/randomUUID)
-         priority
-         (System/currentTimeMillis)
-         f
-         (promise)))
+(defn create-job
+  ([f] (create-job nil f))
+
+  ([priority f]
+   (->Job (UUID/randomUUID)
+          priority
+          (System/currentTimeMillis)
+          f
+          (promise))))
 
 (defn complete-job!
   "Adds the job to the state map of finished-jobs and delivers the
