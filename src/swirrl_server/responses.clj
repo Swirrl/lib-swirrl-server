@@ -1,16 +1,6 @@
-(ns swirrl-server.responses)
+(ns swirrl-server.responses
+  (:require [clojure.string :as string]))
 
-(defmacro when-params
-  "Simple macro that takes a set of paramaters and tests that they're
-  all truthy.  If any are falsey it returns an appropriate ring
-  response with an error message.  The error message assumes that the
-  symbol name is the same as the HTTP parameter name."
-  [params & form]
-  `(if (every? identity ~params)
-     ~@form
-     (api-routes/error-response 400 {:message (str "You must supply the parameters " ~(->> params
-                                                                                       (interpose ", ")
-                                                                                       (apply str)))})))
 (def default-response-map {:type :ok})
 
 (def default-error-map {:type :error :message "An unknown error occured"})
@@ -32,3 +22,20 @@
 (defn error-response
   [code map]
   (api-response code (merge default-error-map map)))
+
+(defn bad-request-response
+  "Returns a 'bad request' response from the given error message."
+  [s]
+  (error-response 400 {:type :error :message s}))
+
+(defmacro when-params
+  "Simple macro that takes a set of paramaters and tests that they're
+  all truthy.  If any are falsey it returns an appropriate ring
+  response with an error message.  The error message assumes that the
+  symbol name is the same as the HTTP parameter name."
+  [params & form]
+  `(if (every? identity ~params)
+     ~@form
+     (let [missing-params# (string/join (interpose ", " ~params))
+           message# (str "You must supply the parameters " missing-params#)]
+       (swirrl-server.responses/bad-request-response message#))))
