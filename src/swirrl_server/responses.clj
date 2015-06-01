@@ -8,12 +8,12 @@
   [params & form]
   `(if (every? identity ~params)
      ~@form
-     (api-routes/error-response 400 {:msg (str "You must supply the parameters " ~(->> params
+     (api-routes/error-response 400 {:message (str "You must supply the parameters " ~(->> params
                                                                                        (interpose ", ")
                                                                                        (apply str)))})))
 (def default-response-map {:type :ok})
 
-(def default-error-map {:type :error :msg "An unknown error occured"})
+(def default-error-map {:type :error :message "An unknown error occured"})
 
 (defn api-response
   "Return a HTTP response of type code, with a JSON content type, and the given
