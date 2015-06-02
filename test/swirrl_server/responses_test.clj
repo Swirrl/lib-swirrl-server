@@ -4,17 +4,17 @@
 
 (deftest when-params-test
   (testing "All params present"
-    (let [p1 :param1
-          p2 "param2"
+    (let [param1 :value1
+          param2 "value2"
           expected {:status :ok}
-          result (when-params [p1 p2]
+          result (when-params [param1 param2]
                    expected)]
       (is (= expected result))))
 
   (testing "Missing params"
-    (let [p1 'param1
-        p2 nil
-        {:keys [status body] :as response} (when-params [p1 p2]
-                                                        {:status :ok})]
+    (let [param1 'value1
+          param2 nil
+          {:keys [status body] :as response} (when-params [param1 param2]
+                                                          {:status :ok})]
     (is (= 400 status))
-    (is (contains? body :message)))))
+    (is (= (body :message) "You must supply the parameters param1, param2")))))

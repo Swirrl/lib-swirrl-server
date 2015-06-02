@@ -36,6 +36,6 @@
   [params & form]
   `(if (every? identity ~params)
      ~@form
-     (let [missing-params# (string/join (interpose ", " ~params))
+     (let [missing-params# (string/join (interpose ", " (quote ~params)))
            message# (str "You must supply the parameters " missing-params#)]
        (swirrl-server.responses/bad-request-response message#))))
