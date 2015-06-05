@@ -52,5 +52,9 @@
     (testing "with an unknown job"
       (let [job-path (finished-job-id-path (UUID/randomUUID))
             status-route (status-routes-handler {})
-            {:keys [status]} (status-route (request :get job-path))]
-        (is (= 404 status))))))
+            status (status-route (request :get job-path))]
+        (is (= 404
+               (:status status)))
+        (is (= restart-id
+               (get-in status [:body :restart-id])))))))
+
