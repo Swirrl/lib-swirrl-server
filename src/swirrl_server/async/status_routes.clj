@@ -15,4 +15,6 @@
        (let [p (get @finished-jobs (UUID/fromString job-id))]
          (if p
            (api/api-response 200 (assoc @p :restart-id restart-id))
-           (api/not-found-response "The specified job-id was not found")))))
+           (->
+             (api/not-found-response "The specified job-id was not found")
+             (assoc-in [:body :restart-id] restart-id))))))
