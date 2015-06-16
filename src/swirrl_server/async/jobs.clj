@@ -21,6 +21,11 @@
           f
           (promise))))
 
+(defn create-child-job
+  "Creates a continuation job from the given parent."
+  [job child-fn]
+  (assoc job :function child-fn :time (System/currentTimeMillis)))
+
 (defn complete-job!
   "Adds the job to the state map of finished-jobs and delivers the
   supplied result to the jobs promise, which will cause blocking jobs
