@@ -3,9 +3,10 @@
   :url "https://github.com/Swirrl/lib-swirrl-server/"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.6.0"]
-                 [ring "1.3.2"]
-                 [compojure "1.3.4"]]
+  :dependencies [[org.clojure/clojure "1.8.0"]
+                 [ring "1.4.0" :exclusions [org.clojure/java.classpath]]
+                 [compojure "1.4.0"]
+                 [prismatic/schema "1.0.4"]]
 
   :profiles {:dev {:dependencies [[ring-mock "0.1.5"]
                                   [ring/ring-devel "1.3.2"]]}})
