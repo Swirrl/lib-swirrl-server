@@ -5,6 +5,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [ring "1.4.0" :exclusions [org.clojure/java.classpath]]
+                 [org.clojure/tools.logging "0.3.1"]
                  [compojure "1.4.0"]
                  [prismatic/schema "1.0.4"]]
 
