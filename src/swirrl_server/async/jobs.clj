@@ -1,6 +1,7 @@
 (ns swirrl-server.async.jobs
-  (:require [swirrl-server.responses :refer [api-response]]
-            [swirrl-server.async.status-routes :refer [finished-job-route]])
+  (:require [swirrl-server.responses :refer [api-response not-found-response OkObject NotFoundObject]]
+            [swirrl-server.async.status-routes :refer [finished-job-route]]
+            [schema.core :as s])
   (:import (java.util UUID)
            (java.util.concurrent PriorityBlockingQueue)))
 
@@ -36,6 +37,11 @@
     (deliver promis result)
     (swap! finished-jobs assoc job-id promis)
     result))
+
+
+(def JobSubmittedResponse (merge OkObject
+                                 {:finished-job s/Str
+                                  :restart-id s/Uuid}))
 
 (defn submitted-job-response [job]
   (api-response 202 {:type :ok
