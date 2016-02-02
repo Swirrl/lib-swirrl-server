@@ -8,10 +8,11 @@
   (:import [java.util UUID]))
 
 
-(def JobNotFinished (merge api/NotFoundObject
-                           {:restart-id s/Uuid}))
+(def JobNotFinishedResponse (merge api/RingSwirrlErrorResponse
+                                   {:body (merge api/NotFoundObject
+                                                 {:restart-id s/Uuid})}))
 
-(s/defn job-not-finished-response :- JobNotFinished
+(s/defn job-not-finished-response :- JobNotFinishedResponse
   [restart-id :- s/Uuid]
   (-> (api/not-found-response "The specified job-id was not found")
       (assoc-in [:body :restart-id] restart-id)))
