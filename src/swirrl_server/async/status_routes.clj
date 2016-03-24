@@ -17,10 +17,14 @@
   (-> (api/not-found-response "The specified job-id was not found")
       (assoc-in [:body :restart-id] restart-id)))
 
-(defn finished-job-route [job]
-  (str "/status/finished-jobs/" (:id job)))
+(defn finished-job-route
+  ([job]
+   (finished-job-route "" job))
+  ([prefix-path job]
+   (str prefix-path "/status/finished-jobs/" (:id job))))
 
-(defn status-routes [finished-jobs restart-id]
+(defn status-routes
+  [finished-jobs restart-id]
   (GET "/finished-jobs/:job-id" [job-id]
        (let [p (get @finished-jobs (UUID/fromString job-id))]
          (if p

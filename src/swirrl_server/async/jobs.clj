@@ -43,7 +43,9 @@
                                  {:finished-job s/Str
                                   :restart-id s/Uuid}))
 
-(defn submitted-job-response [job]
-  (api-response 202 {:type :ok
-                     :finished-job (finished-job-route job)
-                     :restart-id restart-id}))
+(defn submitted-job-response
+  ([job] (submitted-job-response "" job))
+  ([prefix-path job]
+   (api-response 202 {:type :ok
+                      :finished-job (finished-job-route prefix-path job)
+                      :restart-id restart-id})))
