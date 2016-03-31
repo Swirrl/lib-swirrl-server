@@ -1,6 +1,9 @@
-# swirrl-server
+# lib-swirrl-server
 
-Reusable libraries and components for Swirrl's Clojure REST Servers.
+Miscellaneous reusable bits and bobs, functions, components, schemas,
+ring responses etc.  Used for building some ring services at Swirrl.
+
+Not much use to anyone else.
 
 Currently includes:
 
