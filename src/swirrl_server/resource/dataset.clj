@@ -1,6 +1,5 @@
 (ns swirrl-server.resource.dataset
   (:require [grafter.tabular :refer [write-dataset]]
-            [grafter.tabular.common :refer [mapply]]
             [ring.util.io :refer [piped-input-stream]]
             [clout.core :refer [route-matches]]
             [liberator.core :refer [defresource resource]]
@@ -10,19 +9,15 @@
 
 (extend-protocol Representation
   Dataset
-  (as-response [dataset ctx]
-    (let [{:keys [representation]} ctx]
-      (let [media-type (get representation :media-type "text/csv")
-            input-stream (piped-input-stream
-                          (fn [ostream]
-                            (write-dataset ostream dataset :format media-type)))]
-        {:status 200
-         :headers {"Content-Type" media-type}
-         :body input-stream}))))
+  (as-response [dataset {:keys [representation] :as ctx}]
+    {:status 200
+     :headers {"Content-Type" (get representation :media-type)}
+     :body (render-dataset dataset ctx)}))
 
 (def format-extension->mime-type {"csv" "text/csv"
                                   "xls" "application/vnd.ms-excel"
-                                  "xlsx" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})
+                                  "xlsx" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                  "html" "text/html"})
 
 (def supported-tabular-formats (set (vals format-extension->mime-type)))
 
@@ -78,16 +73,28 @@ You can use these to build a libertor Dataset resource of your own e.g.
   {:available-media-types supported-tabular-formats
    :media-type-available? tabular-format-provided})
 
-(comment
-  ;; This is probable not necessary... The app can just build the resource itself... e.g.
+(defmulti render-dataset
+  "Multimethod to coerce a dataset object into a ring response
+  containing the content negotiated media-type.  Extend it to content
+  types you wish to support."
+  (fn [dataset {:keys [representation] :as ctx}]
+    (get representation :media-type)))
 
-  (defresource my-resource dataset-resource-defaults [args]
-    :handle-ok (fn [ctx] (test-dataset 5 5)))
+(defmethod render-dataset "text/html" [dataset ctx]
+  (str "<html><body>"
+       "<h1>Dataset</h1>"
+       "<p>Override <pre>swirrl-server.resource.dataset/render-dataset</pre> for a better representation</p>"
+       "<pre>"
+       (pr-str dataset)
+       "</pre>"
+       "</body></html>"))
 
-  ;; or something like
-
-  (apply resource (assoc dataset-resource-defaults :handle-ok my-fn))
-
-  (defn ->dataset-resource [dataset-fn]
-    (apply resource
-           (assoc dataset-resource-defaults :handle-ok dataset-fn))))
+(defmethod render-dataset :default [dataset {:keys [representation] :as ctx}]
+  ;; all going well we shouldn't need to fall back to something as everything
+  ;; should be negotiated well before this but if
+  ;; we do text/csv should make debugging easier.
+  (let [media-type (get representation :media-type)
+        input-stream (piped-input-stream
+                      (fn [ostream]
+                        (write-dataset ostream dataset :format media-type)))]
+    input-stream))
