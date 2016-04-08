@@ -7,13 +7,6 @@
             [liberator.conneg :refer [best-allowed-content-type stringify]])
   (:import incanter.core.Dataset))
 
-(extend-protocol Representation
-  Dataset
-  (as-response [dataset {:keys [representation] :as ctx}]
-    {:status 200
-     :headers {"Content-Type" (get representation :media-type)}
-     :body (render-dataset dataset ctx)}))
-
 (def format-extension->mime-type {"csv" "text/csv"
                                   "xls" "application/vnd.ms-excel"
                                   "xlsx" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -73,12 +66,33 @@ You can use these to build a libertor Dataset resource of your own e.g.
   {:available-media-types supported-tabular-formats
    :media-type-available? tabular-format-provided})
 
+(defn- dispatch-on-media-type
+  "Get the media-type from the second argument to dispatch on.  For
+  use with the multimethods below."
+  [_dataset {:keys [representation] :as ctx}]
+  (get representation :media-type))
+
 (defmulti render-dataset
-  "Multimethod to coerce a dataset object into a ring response
+  "Convert an incanter Dataset into another type, e.g. an EDN tree for
+  json, or a string of HTML.
+
+  Multimethod to coerce a dataset object into a ring response
   containing the content negotiated media-type.  Extend it to content
   types you wish to support."
-  (fn [dataset {:keys [representation] :as ctx}]
-    (get representation :media-type)))
+
+  dispatch-on-media-type)
+
+(defmulti present-dataset
+  "Multimethod hook to present a Dataset for display depending upon
+  the neogitated media-type.  It should return an incanter Dataset.
+  This allows different views opportunity to reorganise the dataset
+  before finally calling render-dataset."
+
+  dispatch-on-media-type)
+
+(defmethod present-dataset :default [dataset ctx]
+  ;; by default just a pass through
+  dataset)
 
 (defmethod render-dataset "text/html" [dataset ctx]
   (str "<html><body>"
@@ -98,3 +112,13 @@ You can use these to build a libertor Dataset resource of your own e.g.
                       (fn [ostream]
                         (write-dataset ostream dataset :format media-type)))]
     input-stream))
+
+
+(extend-protocol Representation
+  Dataset
+  (as-response [dataset {:keys [representation] :as ctx}]
+    {:status 200
+     :headers {"Content-Type" (get representation :media-type)}
+     :body (-> dataset
+               (present-dataset ctx)
+               (render-dataset ctx))}))
