@@ -8,6 +8,7 @@
   (:import incanter.core.Dataset))
 
 (def format-extension->mime-type {"csv" "text/csv"
+                                  "json" "application/json"
                                   "xls" "application/vnd.ms-excel"
                                   "xlsx" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                   "html" "text/html"})
