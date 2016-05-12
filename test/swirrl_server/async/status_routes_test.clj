@@ -56,5 +56,12 @@
         (is (= 404
                (:status status)))
         (is (= restart-id
-               (get-in status [:body :restart-id])))))))
+               (get-in status [:body :restart-id])))))
+
+    (testing "with a malformed job id"
+      (let [job-path (finished-job-id-path "notaguid")
+            status-route (status-routes-handler {})
+            {:keys [status body] :as resp} (status-route (request :get job-path))]
+        (is (= 404 status))
+        (is (= restart-id (:restart-id body)))))))
 
