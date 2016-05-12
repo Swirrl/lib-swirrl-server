@@ -1,4 +1,4 @@
-(defproject swirrl/lib-swirrl-server "0.3.1"
+(defproject swirrl/lib-swirrl-server "0.4.0"
   :description "Common library for code used in Swirrl servers"
   :url "https://github.com/Swirrl/lib-swirrl-server/"
   :license {:name "Eclipse Public License"
