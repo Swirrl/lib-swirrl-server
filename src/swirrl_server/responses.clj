@@ -2,7 +2,8 @@
   (:require [clojure.string :as string]
             [schema.core :as s]))
 
-(def SwirrlObject {:type (s/enum :ok :error)})
+(def SwirrlObject {:type (s/enum :ok :error)
+                   (s/optional-key :details) {s/Any s/Any}})
 
 (def SwirrlError (merge SwirrlObject {:type (s/eq :error)
                                       :error s/Keyword
@@ -30,19 +31,27 @@
                         :error :unknown-error
                         :message "An unknown error occured"})
 
-(defn api-response
-  "Return a HTTP response of type code, with a JSON content type, and the given
-  hash-map as a body."
+(defn json-response
+  "Returns a ring map representing a HTTP response with the given code
+  and map as a JSON body."
   [code map]
   {:status code
    :headers {"Content-Type" "application/json"}
-   :body (merge default-response-map map)})
+   :body map})
+
+(defn api-response
+  "Returns a JSON response containing a SwirrlObject document in the
+  body. If a map argument is provided it will be attached to the JSON
+  document under the :details key"
+  ([code] (json-response code default-response-map))
+  ([code map]
+   (json-response code (assoc default-response-map :details map))))
 
 (def ^{:doc "Returns a 200 ok response, with a JSON message body containing
-{:type :ok}"} ok-response (api-response 200 {:type :ok}))
+{:type :ok}"} ok-response (json-response 200 {:type :ok}))
 
 (defn not-found-response [message] :- RingSwirrlErrorResponse
-  (api-response 404 {:type :error
+  (json-response 404 {:type :error
                      :error :not-found
                      :message message}))
 
@@ -102,7 +111,7 @@
          args {:error (when (keyword? error-type) error-type) :message msg}
          priority [data default-error-map error-obj args]]
 
-     (api-response code
+     (json-response code
                    (apply merge-with retain-by-identity
                           priority)))))
 

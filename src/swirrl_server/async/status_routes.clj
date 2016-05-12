@@ -39,6 +39,6 @@
        (if-let [job-id (try-parse-uuid job-id)]
          (let [p (get @finished-jobs job-id)]
            (if p
-             (api/api-response 200 (assoc @p :restart-id restart-id))
+             (api/json-response 200 (assoc @p :restart-id restart-id))
              (job-not-finished-response restart-id)))
          (job-not-finished-response restart-id))))
