@@ -1,6 +1,7 @@
 (ns swirrl-server.responses
   (:require [clojure.string :as string]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [swirrl-server.async.jobs :refer [restart-id]]))
 
 (def SwirrlObject {:type (s/enum :ok :error)
                    (s/optional-key :details) {s/Any s/Any}})
@@ -135,3 +136,4 @@
      (let [missing-params# (string/join (interpose ", " (quote ~params)))
            message# (str "You must supply the parameters " missing-params#)]
        (swirrl-server.responses/bad-request-response message#))))
+
