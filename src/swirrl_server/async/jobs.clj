@@ -70,8 +70,10 @@
   (complete-job! job (failed-job-result ex)))
 
 (defn job-succeeded!
-  "Marks the given job as succeeded. If a details value is provided it
-  will be added to the job result map under the :details key."
+  "Complete's the job with complete-job! and sets it's response :type
+  as \"ok\" indicating that it completed without error.  If a details
+  value is provided it will be added to the job result map under
+  the :details key."
   ([job]
    {:pre [(not (job-completed? job))]
     :post [(job-completed? job)]}
