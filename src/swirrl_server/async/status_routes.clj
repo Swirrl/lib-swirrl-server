@@ -12,9 +12,11 @@
 (def RestartId s/Uuid)
 
 (def SubmittedJobResponse
-  {:type (s/eq :ok)
-   :finished-job s/Str
-   :restart-id RestartId})
+  (merge api/RingJSONResponse
+         {(s/required-key :status) (s/eq 202)
+          :body {:type (s/eq :ok)
+                 :finished-job s/Str
+                 :restart-id RestartId}}))
 
 (def PendingJobResult
   (merge api/NotFoundObject
@@ -43,7 +45,7 @@
 (s/defn submitted-job-response :- SubmittedJobResponse
   ([job] (submitted-job-response "" job))
   ([prefix-path job]
-   (api/api-response 202 {:type :ok
+   (api/json-response 202 {:type :ok
                           :finished-job (finished-job-route prefix-path job)
                           :restart-id jobs/restart-id})))
 

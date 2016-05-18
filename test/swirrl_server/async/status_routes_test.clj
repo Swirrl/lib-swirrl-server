@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [ring.mock.request :refer [request]]
             [swirrl-server.async.status-routes :refer :all]
-            [swirrl-server.async.jobs :refer [restart-id create-job]])
+            [swirrl-server.async.jobs :refer [restart-id create-job]]
+            [schema.core :as s])
   (:import [java.util UUID]))
 
 (def job-return-value {:type :ok})
@@ -28,6 +29,11 @@
 (def finished-job-path (comp finished-job-id-path :id))
 
 (def finished-jobs (atom {(:id job) (:value-p job)}))
+
+(deftest submitted-job-response-test
+  (let [job (create-job (fn [j]))
+        response (submitted-job-response job)]
+    (s/validate SubmittedJobResponse response)))
 
 (deftest finished-jobs-test
   (testing "GET /finished-jobs"
