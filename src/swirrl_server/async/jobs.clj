@@ -1,7 +1,8 @@
 (ns swirrl-server.async.jobs
   (:require [schema.core :as s])
   (:import (java.util UUID)
-           (java.util.concurrent PriorityBlockingQueue)))
+           (java.util.concurrent PriorityBlockingQueue)
+           (clojure.lang ExceptionInfo)))
 
 (defonce restart-id (UUID/randomUUID))
 
@@ -54,20 +55,26 @@
 (def JobResult
   (s/either FailedJobResult SuccessfulJobResult))
 
-(defn- failed-job-result [ex]
+(defn- failed-job-result [ex details]
   (let [result {:type "error"
                 :message (.getMessage ex)
                 :error-class (.getName (class ex))}]
-    (if (instance? clojure.lang.ExceptionInfo ex)
-      (assoc result :details (ex-data ex))
+    (if (some? details)
+      (assoc result :details details)
       result)))
 
 (defn job-failed!
-  "Mark the given job as failed"
-  [job ex]
-  {:pre [(not (job-completed? job))]
-   :post [(job-completed? job)]}
-  (complete-job! job (failed-job-result ex)))
+  "Mark the given job as failed. If a details map is provided it will
+  be associated with the job result under the :details key. If no map
+  is provided and ex is an instance of ExceptionInfo the ex-data of
+  the exception will be used as the details."
+  ([job ex]
+   (job-failed! job ex (when (instance? ExceptionInfo ex)
+                        (ex-data ex))))
+  ([job ex details]
+   {:pre [(not (job-completed? job))]
+    :post [(job-completed? job)]}
+   (complete-job! job (failed-job-result ex details))))
 
 (defn job-succeeded!
   "Complete's the job with complete-job! and sets it's response :type

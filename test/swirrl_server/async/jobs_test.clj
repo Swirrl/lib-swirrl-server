@@ -1,7 +1,8 @@
 (ns swirrl-server.async.jobs-test
   (:require [swirrl-server.async.jobs :refer :all]
             [clojure.test :refer :all]
-            [schema.core :as s]))
+            [schema.core :as s])
+  (:import [clojure.lang ExceptionInfo]))
 
 (deftest create-child-job-test
   (let [parent-fn #(println "parent")
@@ -34,19 +35,33 @@
 
 (deftest job-failed-test
   (testing "Java exception"
-    (let [job (create-job (fn []))
-          msg "Failed :("
+    (let [msg "Failed :("
           ex (IllegalArgumentException. msg)]
-      (job-failed! job ex)
-      (assert-failure-result job msg IllegalArgumentException nil)))
+      (testing "without details"
+        (let [job (create-job (fn []))]
+          (job-failed! job ex)
+          (assert-failure-result job msg IllegalArgumentException nil)))
+
+      (testing "with details"
+        (let [job (create-job (fn []))
+              details {:more :info}]
+          (job-failed! job ex details)
+          (assert-failure-result job msg IllegalArgumentException details)))))
 
   (testing "ExceptionInfo"
-    (let [job (create-job (fn []))
-          msg "Job failed"
-          details {}
-          ex (ex-info msg details)]
-      (job-failed! job ex)
-      (assert-failure-result job msg clojure.lang.ExceptionInfo details))))
+    (let [msg "Job failed"
+          ex-details {}
+          ex (ex-info msg ex-details)]
+
+      (testing "without details"
+        (let [job (create-job (fn []))]
+          (job-failed! job ex)
+          (assert-failure-result job msg ExceptionInfo ex-details)))
+
+      (testing "with other details"
+        (let [job (create-job (fn []))
+              details {:other :info}]
+          (job-failed! job ex details))))))
 
 (deftest job-succeeded-test
   (testing "With details"
