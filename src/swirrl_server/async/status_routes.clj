@@ -18,9 +18,11 @@
                  :finished-job s/Str
                  :restart-id RestartId}}))
 
+(defn- status-result [schema]
+  (assoc schema :restart-id RestartId))
+
 (def PendingJobResult
-  (merge api/NotFoundObject
-         {:restart-id RestartId}))
+  (status-result api/NotFoundObject))
 
 (defn job-response-schema [job-result]
   (merge api/RingJSONResponse
@@ -31,8 +33,8 @@
 (def JobStatusResult
   (s/either
    PendingJobResult
-   jobs/FailedJobResult
-   jobs/SuccessfulJobResult))
+   (status-result jobs/FailedJobResult)
+   (status-result jobs/SuccessfulJobResult)))
 
 (def JobStatusResponse (job-response-schema JobStatusResult))
 
@@ -56,7 +58,7 @@
                       :message "The specified job-id was not found"
                       :restart-id restart-id}))
 
-(s/defn status-routes :- JobStatusResult
+(s/defn status-routes
   [finished-jobs restart-id :- RestartId]
   (GET "/finished-jobs/:job-id" [job-id]
        (if-let [job-id (try-parse-uuid job-id)]
