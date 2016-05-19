@@ -43,20 +43,20 @@
     result))
 
 (def FailedJobResult
-  {:type (s/eq "error")
+  {:type (s/eq :error)
    :message s/Str
    :error-class s/Str
    (s/optional-key :details) {s/Any s/Any}})
 
 (def SuccessfulJobResult
-  {:type (s/eq "ok")
+  {:type (s/eq :ok)
    (s/optional-key :details) {s/Any s/Any}})
 
 (def JobResult
   (s/either FailedJobResult SuccessfulJobResult))
 
 (defn- failed-job-result [ex details]
-  (let [result {:type "error"
+  (let [result {:type :error
                 :message (.getMessage ex)
                 :error-class (.getName (class ex))}]
     (if (some? details)
@@ -84,8 +84,8 @@
   ([job]
    {:pre [(not (job-completed? job))]
     :post [(job-completed? job)]}
-   (complete-job! job {:type "ok"}))
+   (complete-job! job {:type :ok}))
   ([job details]
    {:pre [(not (job-completed? job))]
     :post [(job-completed? job)]}
-   (complete-job! job {:type "ok" :details details})))
+   (complete-job! job {:type :ok :details details})))
