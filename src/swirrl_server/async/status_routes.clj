@@ -50,14 +50,14 @@
                           :restart-id jobs/restart-id})))
 
 (s/defn job-not-finished-response :- JobNotFinishedResponse
-  [restart-id :- s/Uuid]
+  [restart-id :- RestartId]
   (api/json-response 404
                      {:type :not-found
                       :message "The specified job-id was not found"
                       :restart-id restart-id}))
 
 (s/defn status-routes :- JobStatusResult
-  [finished-jobs restart-id :- s/Str]
+  [finished-jobs restart-id :- RestartId]
   (GET "/finished-jobs/:job-id" [job-id]
        (if-let [job-id (try-parse-uuid job-id)]
          (let [p (get @finished-jobs job-id)]
