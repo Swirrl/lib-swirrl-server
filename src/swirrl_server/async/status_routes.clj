@@ -51,8 +51,10 @@
 
 (s/defn job-not-finished-response :- JobNotFinishedResponse
   [restart-id :- s/Uuid]
-  (-> (api/not-found-response "The specified job-id was not found")
-      (assoc-in [:body :restart-id] restart-id)))
+  (api/json-response 404
+                     {:type :not-found
+                      :message "The specified job-id was not found"
+                      :restart-id restart-id}))
 
 (s/defn status-routes :- JobStatusResult
   [finished-jobs restart-id :- s/Str]

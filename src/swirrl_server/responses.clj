@@ -24,7 +24,8 @@
 
 (def OkObject {:type (s/eq :ok)})
 
-(def NotFoundObject (merge SwirrlError {:error (s/eq :not-found)}))
+(def NotFoundObject {:type (s/eq :not-found)
+                     :message s/Str})
 
 (def default-response-map {:type :ok})
 
@@ -50,11 +51,6 @@
 
 (def ^{:doc "Returns a 200 ok response, with a JSON message body containing
 {:type :ok}"} ok-response (json-response 200 {:type :ok}))
-
-(defn not-found-response [message] :- RingSwirrlErrorResponse
-  (json-response 404 {:type :error
-                     :error :not-found
-                     :message message}))
 
 (def ^:private KeywordOrThrowable (s/either s/Keyword java.lang.Throwable))
 
