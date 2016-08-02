@@ -26,6 +26,8 @@
 
 (def CsvContext (schema-with-media-type "text/csv"))
 
+(def JsonContext (schema-with-media-type "application/json"))
+
 (defn ->liberator-context [req]
   {:request req})
 
@@ -56,6 +58,9 @@
     (conforms-to-schema CsvContext (request-path "/blah.csv")
                         "Expected a CSV media type to be set in the liberator context.")
 
+    (conforms-to-schema JsonContext (request-path "/blah.json")
+                        "Expected a JSON media type to be set in the liberator context.")
+
     (conforms-to-schema Nil (request-path "/no/file/extension")
                         "Expected nil to be returned as the context when the path format does not match a media type.")))
 
@@ -71,6 +76,9 @@
     (conforms-to-schema CsvContext (accept-request "text/csv")
                         "Expected an .xls media type to be set in the liberator context.")
 
+    (conforms-to-schema JsonContext (accept-request "application/json")
+                        "Expected a JSON media type to be set in the liberator context.")
+    
     (conforms-to-schema Nil (accept-request "unrecognised/media-type")
                         "Expected a nil liberator context to be returned for an unrecognised media-type.")))
 

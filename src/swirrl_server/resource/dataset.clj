@@ -4,7 +4,8 @@
             [clout.core :refer [route-matches]]
             [liberator.core :refer [defresource resource]]
             [liberator.representation :refer [Representation as-response]]
-            [liberator.conneg :refer [best-allowed-content-type stringify]])
+            [liberator.conneg :refer [best-allowed-content-type stringify]]
+            [clojure.data.json :as json])
   (:import incanter.core.Dataset))
 
 (def format-extension->mime-type {"csv" "text/csv"
@@ -103,6 +104,9 @@ You can use these to build a libertor Dataset resource of your own e.g.
        (pr-str dataset)
        "</pre>"
        "</body></html>"))
+
+(defmethod render-dataset "application/json" [dataset ctx]
+  (json/write-str dataset))
 
 (defmethod render-dataset :default [dataset {:keys [representation] :as ctx}]
   ;; all going well we shouldn't need to fall back to something as everything
