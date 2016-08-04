@@ -1,7 +1,10 @@
 (ns swirrl-server.async.jobs
-  (:require [schema.core :as s])
+  (:require [schema.core :as s]
+            [clj-logging-config.log4j :as l4j]
+            [clojure.tools.logging :as log])
   (:import (java.util UUID)
-           (java.util.concurrent PriorityBlockingQueue)))
+           (clojure.lang ExceptionInfo)
+           (org.apache.log4j MDC)))
 
 (defonce restart-id (UUID/randomUUID))
 
@@ -10,15 +13,25 @@
 
 (defrecord Job [id priority time function value-p])
 
+(defn- wrap-logging-context
+  "Preserve the jobId and requestId in log4j logs."
+  [f]
+  (let [request-id (MDC/get "reqId")] ;; copy reqId off calling thread
+    (fn [{job-id :id :as job}]
+      (l4j/with-logging-context {:jobId (str "job-" (.substring (str job-id) 0 8))
+                                 :reqId request-id}
+        (f job)))))
+
 (defn create-job
   ([f] (create-job nil f))
 
   ([priority f]
-   (->Job (UUID/randomUUID)
-          priority
-          (System/currentTimeMillis)
-          f
-          (promise))))
+   (let [id (UUID/randomUUID)]
+     (->Job id
+            priority
+            (System/currentTimeMillis)
+            (wrap-logging-context f)
+            (promise)))))
 
 (defn job-completed?
   "Whether the given job has been completed"

@@ -6,11 +6,12 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [ring "1.4.0" :exclusions [org.clojure/java.classpath]]
                  [org.clojure/tools.logging "0.3.1"]
+                 [clj-logging-config "1.9.12"]
                  [compojure "1.4.0"]
                  [liberator "0.14.0"]
                  [prismatic/schema "1.0.4"]]
 
   :profiles {:dev {:dependencies [[ring-mock "0.1.5"]
-                                  [grafter "0.7.0"]
+                                  [grafter "0.7.4"]
                                   [prismatic/schema "1.0.4"]
                                   [ring/ring-devel "1.3.2"]]}})
