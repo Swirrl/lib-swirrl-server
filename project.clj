@@ -8,7 +8,7 @@
                  [org.clojure/tools.logging "0.3.1"]
                  [clj-logging-config "1.9.12"]
                  [compojure "1.4.0"]
-                 [liberator "0.14.0"]
+                 [liberator "0.14.1"]
                  [prismatic/schema "1.0.4"]]
 
   :profiles {:dev {:dependencies [[ring-mock "0.1.5"]
