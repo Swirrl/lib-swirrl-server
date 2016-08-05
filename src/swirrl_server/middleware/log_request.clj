@@ -12,10 +12,10 @@
   correctly establishes a swirrl-style log4j MDC logging context over
   the supplied function."
   [func]
-  (let [request-id (MDC/get "reqId")
-        start-time (MDC/get "start-time")] ;; this is for logging only and is set in the log4
+  (let [log-ctx (into {} (MDC/getContext)) ;; copy the logging context onto the new thread/function
+        start-time (MDC/get "start-time")]
     (fn [os]
-      (l4j/with-logging-context {:reqId request-id}
+      (l4j/with-logging-context log-ctx
         (log/info "Streaming result with function" func)
         (let [result (func os);; run the function
               total-time (when start-time (- (System/currentTimeMillis) start-time))]
