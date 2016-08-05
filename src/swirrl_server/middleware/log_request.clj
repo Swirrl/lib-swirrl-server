@@ -7,19 +7,23 @@
            [org.apache.log4j MDC]
            [java.io PipedInputStream PipedOutputStream]))
 
-(defn- make-response-streamer [func request-id start-time]
-  (fn [os]
-    (l4j/with-logging-context {:reqId request-id}
-      (log/info "Streaming result with function" func)
-      (let [result (func os);; run the function
-            total-time (when start-time (- (System/currentTimeMillis) start-time))]
-        (log/info "RESPONSE finished." (when total-time (str " It took " (str total-time "ms") " to execute")))
-        result))))
+(defn make-response-logger
+  "Wrap the given function with one that logs response times and
+  correctly establishes a swirrl-style log4j MDC logging context over
+  the supplied function."
+  [func]
+  (let [request-id (MDC/get "reqId")
+        start-time (MDC/get "start-time")] ;; this is for logging only and is set in the log4
+    (fn [os]
+      (l4j/with-logging-context {:reqId request-id}
+        (log/info "Streaming result with function" func)
+        (let [result (func os);; run the function
+              total-time (when start-time (- (System/currentTimeMillis) start-time))]
+          (log/info "RESPONSE finished." (when total-time (str " It took " (str total-time "ms") " to execute")))
+          result)))))
 
 (defn streaming-body [func]
-  (let [request-id (MDC/get "reqId")
-        start-time (MDC/get "start-time") ;; this is for logging only and is set in the log4
-        wrapped-func (make-response-streamer func request-id start-time)
+  (let [wrapped-func (make-response-logger func)
         is (ringio/piped-input-stream wrapped-func)]
     is))
 
