@@ -25,7 +25,6 @@
   (r/error-response 500 :unknown-error (.getMessage ex)))
 
 (defmethod encode-error :default [ex]
-  (log/error ex "An unhandled error raised")
   (if (instance? clojure.lang.ExceptionInfo ex)
     (let [error-type (:error (ex-data ex))]
       (assert error-type "Because the defmulti dispatches clojure.lang.ExceptionInfo's as :keywords we should never have a nil error-type here" )
