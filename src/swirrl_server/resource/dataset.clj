@@ -16,12 +16,16 @@
 
 (def supported-tabular-formats (set (vals format-extension->mime-type)))
 
-(defn tabular-format-from-path-available [{:keys [request] :as ctx}]
-  (when-let [media-type-from-path (->> request
-                                       (route-matches "*.:format")
-                                       :format
-                                       format-extension->mime-type)]
-    (assoc-in ctx [:representation :media-type] media-type-from-path)))
+(defn tabular-format-from-path-available
+  ([{:keys [request] :as ctx}]
+   (tabular-format-from-path-available format-extension->mime-type ctx))
+
+  ([supported-formats-map {:keys [request] :as ctx}]
+   (when-let [media-type-from-path (->> request
+                                        (route-matches "*.:format")
+                                        :format
+                                        supported-formats-map)]
+     (assoc-in ctx [:representation :media-type] media-type-from-path))))
 
 (defn tabular-format-acceptable
   "A function suitable for use with liberator's :media-type-available?
@@ -34,11 +38,15 @@
 
   This function will return a liberator context with the
   selected [:representation :media-type] assoc'd in it."
-  [{:keys [request] :as ctx}]
-  (let [acceptable-content-types (get-in request [:headers "accept"])]
-    (when-let [accepted-format (best-allowed-content-type acceptable-content-types
-                                                          supported-tabular-formats)]
-      (assoc-in ctx [:representation :media-type] (stringify accepted-format)))))
+
+  ([{:keys [request] :as ctx}]
+   (tabular-format-acceptable format-extension->mime-type ctx))
+
+  ([supported-formats-map {:keys [request] :as ctx}]
+   (let [acceptable-content-types (get-in request [:headers "accept"])]
+     (when-let [accepted-format (best-allowed-content-type acceptable-content-types
+                                                           (set (vals supported-formats-map)))]
+       (assoc-in ctx [:representation :media-type] (stringify accepted-format))))))
 
 (defn tabular-format-provided
   "A function suitable for use with liberator's :media-type-available?
@@ -51,9 +59,12 @@
 
   This function will return a liberator context with the
   selected [:representation :media-type] assoc'd in it."
-  [{:keys [request] :as ctx}]
-  (merge (tabular-format-acceptable ctx)
-         (tabular-format-from-path-available ctx)))
+  ([{:keys [request] :as ctx}]
+   (tabular-format-provided format-extension->mime-type ctx))
+
+  ([supported-formats-map {:keys [request] :as ctx}]
+   (merge (tabular-format-acceptable supported-formats-map ctx)
+          (tabular-format-from-path-available supported-formats-map ctx))))
 
 (def ^{:doc
        "Define some defaults for a liberator resource that returns and content
