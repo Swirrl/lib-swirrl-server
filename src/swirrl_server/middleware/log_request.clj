@@ -45,20 +45,23 @@
   ([handler]
    (log-request handler {}))
   ([handler scrub-map]
-   (fn [req]
-     (let [start-time (System/currentTimeMillis)]
-       (l4j/with-logging-context {:reqId (str "req-" (-> (UUID/randomUUID) str (.substring 0 8)))
-                                  :start-time start-time}
-         (let [logable-params (reduce (fn [acc [k v]]
-                                        (assoc acc k v))
-                                      (:params req)
-                                      scrub-map)]
+   (let [scrub (fn [acc [k v]]
+                 (if (acc k)
+                   (assoc acc k v)
+                   acc))]
+     (fn [req]
+       (let [start-time (System/currentTimeMillis)]
+         (l4j/with-logging-context {:reqId (str "req-" (-> (UUID/randomUUID) str (.substring 0 8)))
+                                    :start-time start-time}
+           (let [logable-params (reduce scrub
+                                        (:params req {})
+                                        scrub-map)]
 
-           (log/info "REQUEST" (:uri req) (-> req :headers (get "accept")) logable-params))
-         (let [resp (handler req)
-               headers-time (- (System/currentTimeMillis) start-time)]
-           (if (instance? java.io.InputStream (:body resp))
-             (log/info "RESPONSE" (:status resp) "headers sent after" (str headers-time "ms") "streaming body...")
-             (log/info "RESPONSE " (:status resp) "finished.  It took" (str headers-time "ms") "to execute"))
+             (log/info "REQUEST" (:uri req) (-> req :headers (get "accept")) logable-params))
+           (let [resp (handler req)
+                 headers-time (- (System/currentTimeMillis) start-time)]
+             (if (instance? java.io.InputStream (:body resp))
+               (log/info "RESPONSE" (:status resp) "headers sent after" (str headers-time "ms") "streaming body...")
+               (log/info "RESPONSE " (:status resp) "finished.  It took" (str headers-time "ms") "to execute"))
 
-           resp))))))
+             resp)))))))
