@@ -31,17 +31,34 @@
   "A ring middleware that logs HTTP requests and responses in the
   Swirrl house-style.  It runs each request in a log4j MDC scope and
   sets a request id to every request.  Additionally it logs the
-  time spent serving each request/response."
-  [handler]
-  (fn [req]
-    (let [start-time (System/currentTimeMillis)]
-      (l4j/with-logging-context {:reqId (str "req-" (-> (UUID/randomUUID) str (.substring 0 8)))
-                                 :start-time start-time}
-        (log/info "REQUEST" (:uri req) (-> req :headers (get "accept")) (:params req))
-        (let [resp (handler req)
-              headers-time (- (System/currentTimeMillis) start-time)]
-          (if (instance? java.io.InputStream (:body resp))
-            (log/info "RESPONSE" (:status resp) "headers sent after" (str headers-time "ms") "streaming body...")
-            (log/info "RESPONSE " (:status resp) "finished.  It took" (str headers-time "ms") "to execute"))
+  time spent serving each request/response.
 
-          resp)))))
+  Takes an optional map of parameters to scrub from logs, e.g. a map
+  like this:
+
+  {:param-a \"scrubbed\"
+   :param-b \"hidden\"}
+
+  Will ensure that :param-a is logged as \"scrubbed\" by this
+  middleware and that the value at :param-b is replaced by the string
+  \"hidden\"."
+  ([handler]
+   (log-request handler {}))
+  ([handler scrub-map]
+   (fn [req]
+     (let [start-time (System/currentTimeMillis)]
+       (l4j/with-logging-context {:reqId (str "req-" (-> (UUID/randomUUID) str (.substring 0 8)))
+                                  :start-time start-time}
+         (let [logable-params (reduce (fn [acc [k v]]
+                                        (assoc acc k v))
+                                      (:params req)
+                                      scrub-map)]
+
+           (log/info "REQUEST" (:uri req) (-> req :headers (get "accept")) logable-params))
+         (let [resp (handler req)
+               headers-time (- (System/currentTimeMillis) start-time)]
+           (if (instance? java.io.InputStream (:body resp))
+             (log/info "RESPONSE" (:status resp) "headers sent after" (str headers-time "ms") "streaming body...")
+             (log/info "RESPONSE " (:status resp) "finished.  It took" (str headers-time "ms") "to execute"))
+
+           resp))))))
