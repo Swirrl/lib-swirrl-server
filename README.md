@@ -1,5 +1,7 @@
 # lib-swirrl-server
 
+**DEPRECATED:** Try and use something else if you're doing anything greenfield ;-) 
+
 Miscellaneous reusable bits and bobs, functions, components, schemas,
 ring responses etc.  Used for building some ring services at Swirrl.
 
